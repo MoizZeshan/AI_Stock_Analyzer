@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Large model (keep externally)
+models/generalized_rf_model.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
