@@ -3,7 +3,9 @@ services:
     name: ai-stock-backend
     env: python
     plan: free
-    buildCommand: pip install --upgrade pip setuptools wheel && pip install --upgrade -r requirements.txt
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install --upgrade -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
     branch: main
