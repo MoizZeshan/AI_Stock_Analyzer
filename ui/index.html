@@ -36,13 +36,13 @@
   <section class="min-h-screen flex flex-col justify-start items-center text-center px-4 fade-in pt-20">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-2 gradient-text drop-shadow-lg leading-tight">AI Stock Analyzer</h1>
     <p class="text-base md:text-lg text-gray-300 max-w-3xl mb-5 leading-relaxed">
-      Enter any ticker and unlock instant AI-powered predictions — your trading assistant in one click.
+      Enter any ticker and get instant AI-powered predictions — your trading assistant in one click.
     </p>
 
     <div class="flex flex-col md:flex-row gap-4 w-full max-w-xl mb-3">
       <input id="tickerInput" type="text" placeholder="Enter stock ticker (e.g., TSLA)" class="flex-1 px-5 py-4 rounded-2xl text-black font-bold tracking-wide focus:ring-4 focus:ring-purple-500 outline-none" />
       <button onclick="predictStock()" class="bg-gradient-to-r from-purple-500 to-purple-700 glow-button px-6 py-4 rounded-2xl font-semibold">
-        Predict Any Stock
+        Predict Stock
       </button>
     </div>
 
@@ -58,7 +58,7 @@
   <section class="px-6 py-24 text-center bg-gray-900">
     <h2 class="text-4xl font-bold mb-8 gradient-text">About This Project</h2>
     <p class="max-w-3xl mx-auto text-gray-300 text-lg leading-relaxed">
-      This AI Stock Analyzer was built as part of my AI Bootcamp journey. It uses feature engineering, technical indicators, and ML models to predict next-day closing prices and generate actionable trading signals.
+      This AI Stock Analyzer uses feature engineering and XGBoost to predict next-day closing prices and generate actionable trading signals with confidence scores.
     </p>
   </section>
 
@@ -66,9 +66,9 @@
   <section class="px-6 py-24 text-center">
     <h2 class="text-4xl font-bold mb-8 gradient-text">What’s Included</h2>
     <div class="max-w-2xl mx-auto grid gap-6 text-left">
-      <div class="glass rounded-xl p-5 text-lg">📊 Full pipeline — data prep, feature engineering, model training & backend API</div>
-      <div class="glass rounded-xl p-5 text-lg">🤖 Pretrained <code>.pkl</code> model + full training code to retrain</div>
-      <div class="glass rounded-xl p-5 text-lg">📈 Explanation of indicators & features for transparency</div>
+      <div class="glass rounded-xl p-5 text-lg">📊 Full pipeline — data fetching, feature engineering, and backend API</div>
+      <div class="glass rounded-xl p-5 text-lg">🤖 Pretrained XGBoost model with retraining capability</div>
+      <div class="glass rounded-xl p-5 text-lg">📈 Technical indicators explained for transparency</div>
       <div class="glass rounded-xl p-5 text-lg">🎯 Built for students, traders & AI enthusiasts</div>
     </div>
   </section>
@@ -81,7 +81,6 @@
       <span>⚡ FastAPI</span>
       <span>🧠 AutoGen</span>
       <span>🌲 XGBoost</span>
-      <span>🌳 Random Forest</span>
     </div>
   </section>
 
@@ -124,8 +123,8 @@
         const data = await response.json();
 
         document.getElementById('results').classList.remove('hidden');
-        document.getElementById('actualPrice').innerText = `Actual Price: $${data.last_close}`;
-        document.getElementById('predictedPrice').innerText = `Predicted Price: $${data.predicted_close}`;
+        document.getElementById('actualPrice').innerText = `Actual Price: $${parseFloat(data.last_close).toFixed(2)}`;
+        document.getElementById('predictedPrice').innerText = `Predicted Price: $${parseFloat(data.predicted_close).toFixed(2)}`;
         
         const signalEl = document.getElementById('signal');
         signalEl.innerText = `Signal: ${data.signal}`;
@@ -134,7 +133,7 @@
         else if (data.signal.toUpperCase() === 'SELL') signalEl.classList.add('signal-sell');
         else signalEl.classList.add('signal-neutral');
 
-        document.getElementById('confidence').innerText = `Confidence: ${data.confidence}%`;
+        document.getElementById('confidence').innerText = `Confidence: ${parseFloat(data.confidence).toFixed(2)}%`;
       } catch (error) {
         alert('Error fetching prediction. Check backend logs.');
         console.error(error);

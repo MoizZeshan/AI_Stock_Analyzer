@@ -38,20 +38,28 @@ def root():
 @app.get("/predict")
 def predict(ticker: str):
     try:
-        # Run agents sequentially
+        # --- Run agents sequentially ---
         df = DataAgent(ticker).run()
         df_features = FeatureAgent(df).run()
-        pred_xgb, pred_rf, pred_avg = ModelAgent(df_features).run()
-        last_close = df_features['Close'].iloc[-1]
-        signal = ComparisonAgent(last_close, pred_avg).run()
-        confidence = ConfidenceAgent(pred_xgb, pred_rf, last_close).run()
+
+        # XGBoost prediction
+        pred_xgb = float(ModelAgent(df_features).run())  # cast numpy.float32 → float
+        last_close = float(df_features['Close'].iloc[-1])  # cast numpy.float32 → float
+
+        # Trading signal
+        signal = ComparisonAgent(last_close, pred_xgb).run()
+
+        # Confidence score using recent returns
+        recent_returns = df_features['Return'].dropna()
+        confidence = float(ConfidenceAgent(pred_xgb, last_close, recent_returns).run())
 
         return {
             "ticker": ticker.upper(),
-            "last_close": round(last_close, 2),
-            "predicted_close": round(pred_avg, 2),
+            "last_close": last_close,
+            "predicted_close": pred_xgb,
             "signal": signal,
             "confidence": confidence
         }
+
     except Exception as e:
         return {"error": str(e)}

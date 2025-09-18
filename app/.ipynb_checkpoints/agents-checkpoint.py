@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from app.models_loader import xgb_model, rf_model
+from app.models_loader import xgb_model
 
 FEATURES = ['Open', 'High', 'Low', 'Volume', 'MA10', 'MA50', 'MA200',
             'EMA10', 'EMA50', 'Return', 'Volatility', 'Momentum', 'RSI',
@@ -60,30 +60,43 @@ class ModelAgent:
     def run(self):
         X_last = self.df[FEATURES].iloc[[-1]]
         pred_xgb = xgb_model.predict(X_last)[0]
-        pred_rf = rf_model.predict(X_last)[0]
-        pred_avg = (pred_xgb + pred_rf)/2
-        return pred_xgb, pred_rf, pred_avg
+        return pred_xgb  # Only XGBoost prediction
 
 class ComparisonAgent:
-    def __init__(self, last_close, predicted_avg):
+    def __init__(self, last_close, predicted_close):
         self.last_close = last_close
-        self.predicted_avg = predicted_avg
+        self.predicted_close = predicted_close
 
     def run(self):
-        if self.predicted_avg > self.last_close * 1.01:
+        if self.predicted_close > self.last_close * 1.01:
             signal = "Buy"
-        elif self.predicted_avg < self.last_close * 0.99:
+        elif self.predicted_close < self.last_close * 0.99:
             signal = "Sell"
         else:
             signal = "Neutral"
         return signal
 
 class ConfidenceAgent:
-    def __init__(self, pred_xgb, pred_rf, last_close):
-        self.pred_xgb = pred_xgb
-        self.pred_rf = pred_rf
+    def __init__(self, predicted_close, last_close, recent_returns):
+        """
+        predicted_close: XGB predicted closing price
+        last_close: most recent actual close price
+        recent_returns: Series of recent daily returns (pct change)
+        """
+        self.predicted_close = predicted_close
         self.last_close = last_close
+        self.recent_returns = recent_returns
 
     def run(self):
-        confidence = 100 - abs(self.pred_xgb - self.pred_rf)/self.last_close * 100
+        # % difference between prediction and last close
+        diff_pct = abs(self.predicted_close - self.last_close) / self.last_close
+
+        # recent volatility (std of last 10 daily returns)
+        volatility = np.std(self.recent_returns[-10:])
+
+        # Confidence = 100% - scaled diff, scaled by volatility
+        confidence = max(0, 100 - (diff_pct / (volatility + 1e-6)) * 50)  # scaling factor
+
+        # Limit confidence to 100%
+        confidence = min(confidence, 100)
         return round(confidence, 2)
