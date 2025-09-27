@@ -109,47 +109,58 @@
       <div class="w-2 h-7 bg-green-500 animate-bounce" style="animation-delay: 0.8s;"></div>
     </div>
   </div>
-
   <script>
     async function predictStock() {
       const ticker = document.getElementById('tickerInput').value.trim();
       if (!ticker) return alert('Please enter a stock ticker');
 
+      // Show loading spinner
       document.getElementById('loading').classList.remove('hidden');
       
       try {
-        // ✅ Use relative path instead of hardcoded Render URL
-        const response = await fetch(`/predict?ticker=${encodeURIComponent(ticker)}`);
-        if (!response.ok) throw new Error(`Failed to fetch prediction (Status: ${response.status})`);
+        // ✅ Call your Render backend with await
+        const response = await fetch(`https://ai-stock-analyzer-backend.onrender.com/predict?ticker=${ticker}`);
         
+        if (!response.ok) {
+          throw new Error(`Failed to fetch prediction (Status: ${response.status})`);
+        }
+
         const data = await response.json();
 
+        // ✅ Show results section
         document.getElementById('results').classList.remove('hidden');
-        document.getElementById('actualPrice').innerText = `Actual Price: $${parseFloat(data.last_close).toFixed(2)}`;
-        document.getElementById('predictedPrice').innerText = `Predicted Price: $${parseFloat(data.predicted_close).toFixed(2)}`;
+        document.getElementById('actualPrice').innerText =
+          `Actual Price: $${parseFloat(data.last_close).toFixed(2)}`;
+        document.getElementById('predictedPrice').innerText =
+          `Predicted Price: $${parseFloat(data.predicted_close).toFixed(2)}`;
         
+        // ✅ Show trading signal with colors
         const signalEl = document.getElementById('signal');
         signalEl.innerText = `Signal: ${data.signal}`;
         signalEl.classList.remove('signal-buy', 'signal-sell', 'signal-neutral');
-        if (data.signal.toUpperCase() === 'BUY') signalEl.classList.add('signal-buy');
-        else if (data.signal.toUpperCase() === 'SELL') signalEl.classList.add('signal-sell');
+        if (data.signal?.toUpperCase() === 'BUY') signalEl.classList.add('signal-buy');
+        else if (data.signal?.toUpperCase() === 'SELL') signalEl.classList.add('signal-sell');
         else signalEl.classList.add('signal-neutral');
 
+        // ✅ Show confidence (High / Medium / Low)
         document.getElementById('confidence').innerText = `Confidence: ${data.confidence}`;
 
+        // ✅ Show reasoning as bullet points if available
         const reasoningDiv = document.getElementById('reasoning');
         reasoningDiv.innerHTML = "";
         if (Array.isArray(data.reasoning)) {
           reasoningDiv.innerHTML = "<h3 class='text-lg font-semibold mb-2'>Reasoning:</h3>" +
             data.reasoning.map(r => `<p class='result-highlight'>${r}</p>`).join("");
         }
+
       } catch (error) {
-        console.error("Prediction fetch error:", error);
-        alert('Error fetching prediction. Check backend logs and browser console.');
+        alert('Error fetching prediction. Check backend logs.');
+        console.error("Prediction Error:", error);
       } finally {
+        // Hide loading spinner
         document.getElementById('loading').classList.add('hidden');
       }
     }
-  </script>
+  </script> 
 </body>
 </html>
