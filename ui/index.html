@@ -51,6 +51,7 @@
       <p id="predictedPrice" class="result-highlight"></p>
       <p id="signal" class="result-highlight text-xl"></p>
       <p id="confidence" class="result-highlight text-gray-300"></p>
+      <div id="reasoning" class="mt-3"></div>
     </div>
   </section>
 
@@ -117,8 +118,9 @@
       document.getElementById('loading').classList.remove('hidden');
       
       try {
-        const response = await fetch(`http://127.0.0.1:8000/predict?ticker=${ticker}`);
-        if (!response.ok) throw new Error('Failed to fetch prediction');
+        // ✅ Use relative path instead of hardcoded Render URL
+        const response = await fetch(`/predict?ticker=${encodeURIComponent(ticker)}`);
+        if (!response.ok) throw new Error(`Failed to fetch prediction (Status: ${response.status})`);
         
         const data = await response.json();
 
@@ -133,10 +135,17 @@
         else if (data.signal.toUpperCase() === 'SELL') signalEl.classList.add('signal-sell');
         else signalEl.classList.add('signal-neutral');
 
-        document.getElementById('confidence').innerText = `Confidence: ${parseFloat(data.confidence).toFixed(2)}%`;
+        document.getElementById('confidence').innerText = `Confidence: ${data.confidence}`;
+
+        const reasoningDiv = document.getElementById('reasoning');
+        reasoningDiv.innerHTML = "";
+        if (Array.isArray(data.reasoning)) {
+          reasoningDiv.innerHTML = "<h3 class='text-lg font-semibold mb-2'>Reasoning:</h3>" +
+            data.reasoning.map(r => `<p class='result-highlight'>${r}</p>`).join("");
+        }
       } catch (error) {
-        alert('Error fetching prediction. Check backend logs.');
-        console.error(error);
+        console.error("Prediction fetch error:", error);
+        alert('Error fetching prediction. Check backend logs and browser console.');
       } finally {
         document.getElementById('loading').classList.add('hidden');
       }

@@ -9,138 +9,109 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     h1, h2 { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
-    .glass {
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(14px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-    }
-    .gradient-text {
-      background: linear-gradient(90deg, #14b8a6, #9333ea);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(14px) saturate(180%); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+    .gradient-text { background: linear-gradient(90deg, #14b8a6, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .fade-in { animation: fadeIn 1s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .glow-button { box-shadow: 0 0 25px rgba(147, 51, 234, 0.5); transition: all 0.3s ease; }
-    .glow-button:hover { box-shadow: 0 0 35px rgba(147, 51, 234, 0.8); transform: scale(1.05); }
-    .result-highlight { font-size: 1.05rem; font-weight: bold; background: rgba(255,255,255,0.04); border-left: 3px solid #9333ea; padding: 0.6rem; border-radius: 0.8rem; margin-bottom: 0.4rem; animation: fadeInGlow 0.8s ease-in-out; }
-    @keyframes fadeInGlow { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    .signal-buy { color: #22c55e; text-shadow: 0 0 10px rgba(34,197,94,0.8); }
-    .signal-sell { color: #ef4444; text-shadow: 0 0 10px rgba(239,68,68,0.8); }
-    .signal-neutral { color: #9ca3af; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .glow-button { box-shadow:0 0 25px rgba(147,51,234,0.5); transition:all 0.3s ease; }
+    .glow-button:hover { box-shadow:0 0 35px rgba(147,51,234,0.8); transform:scale(1.05); }
+    .result-highlight { font-size:1.05rem; font-weight:bold; background:rgba(255,255,255,0.04); border-left:3px solid #9333ea; padding:0.6rem; border-radius:0.8rem; margin-bottom:0.4rem; }
+    .signal-buy { color:#22c55e; text-shadow:0 0 10px rgba(34,197,94,0.8); }
+    .signal-sell { color:#ef4444; text-shadow:0 0 10px rgba(239,68,68,0.8); }
+    .signal-neutral { color:#9ca3af; }
+    .confidence-high { color:#22c55e; font-weight:600; }
+    .confidence-medium { color:#facc15; font-weight:600; }
+    .confidence-low { color:#ef4444; font-weight:600; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-gray-950 via-black to-gray-900 text-white">
-  <!-- Hero Section -->
-  <section class="min-h-screen flex flex-col justify-start items-center text-center px-4 fade-in pt-20">
-    <h1 class="text-5xl md:text-6xl font-extrabold mb-2 gradient-text drop-shadow-lg leading-tight">AI Stock Analyzer</h1>
-    <p class="text-base md:text-lg text-gray-300 max-w-3xl mb-5 leading-relaxed">
-      Enter any ticker and get instant AI-powered predictions — your trading assistant in one click.
-    </p>
+<section class="min-h-screen flex flex-col justify-start items-center text-center px-4 fade-in pt-20">
+  <h1 class="text-5xl md:text-6xl font-extrabold mb-2 gradient-text drop-shadow-lg leading-tight">AI Stock Analyzer</h1>
+  <p class="text-base md:text-lg text-gray-300 max-w-3xl mb-5 leading-relaxed">Enter any ticker and get instant AI-powered predictions.</p>
 
-    <div class="flex flex-col md:flex-row gap-4 w-full max-w-xl mb-3">
-      <input id="tickerInput" type="text" placeholder="Enter stock ticker (e.g., TSLA)" class="flex-1 px-5 py-4 rounded-2xl text-black font-bold tracking-wide focus:ring-4 focus:ring-purple-500 outline-none" />
-      <button onclick="predictStock()" class="bg-gradient-to-r from-purple-500 to-purple-700 glow-button px-6 py-4 rounded-2xl font-semibold">
-        Predict Stock
-      </button>
-    </div>
-
-    <div id="results" class="hidden mt-3 glass rounded-2xl p-5 w-full max-w-xl text-left">
-      <p id="actualPrice" class="result-highlight"></p>
-      <p id="predictedPrice" class="result-highlight"></p>
-      <p id="signal" class="result-highlight text-xl"></p>
-      <p id="confidence" class="result-highlight text-gray-300"></p>
-    </div>
-  </section>
-
-  <!-- About Section -->
-  <section class="px-6 py-24 text-center bg-gray-900">
-    <h2 class="text-4xl font-bold mb-8 gradient-text">About This Project</h2>
-    <p class="max-w-3xl mx-auto text-gray-300 text-lg leading-relaxed">
-      This AI Stock Analyzer uses feature engineering and XGBoost to predict next-day closing prices and generate actionable trading signals with confidence scores.
-    </p>
-  </section>
-
-  <!-- Features Section -->
-  <section class="px-6 py-24 text-center">
-    <h2 class="text-4xl font-bold mb-8 gradient-text">What’s Included</h2>
-    <div class="max-w-2xl mx-auto grid gap-6 text-left">
-      <div class="glass rounded-xl p-5 text-lg">📊 Full pipeline — data fetching, feature engineering, and backend API</div>
-      <div class="glass rounded-xl p-5 text-lg">🤖 Pretrained XGBoost model with retraining capability</div>
-      <div class="glass rounded-xl p-5 text-lg">📈 Technical indicators explained for transparency</div>
-      <div class="glass rounded-xl p-5 text-lg">🎯 Built for students, traders & AI enthusiasts</div>
-    </div>
-  </section>
-
-  <!-- Tech Stack Section -->
-  <section class="px-6 py-24 text-center bg-gray-900">
-    <h2 class="text-4xl font-bold mb-8 gradient-text">Tech Stack</h2>
-    <div class="flex flex-wrap justify-center gap-8 text-gray-300 text-lg">
-      <span>🐍 Python</span>
-      <span>⚡ FastAPI</span>
-      <span>🧠 AutoGen</span>
-      <span>🌲 XGBoost</span>
-    </div>
-  </section>
-
-  <!-- Contact Section -->
-  <section class="px-6 py-24 text-center">
-    <h2 class="text-4xl font-bold mb-8 gradient-text">Get in Touch</h2>
-    <div class="flex justify-center gap-6">
-      <a href="https://github.com/MoizZeshan/Assignments" target="_blank" class="bg-gradient-to-r from-purple-500 to-purple-700 glow-button px-6 py-3 rounded-xl font-semibold">GitHub</a>
-      <a href="mailto:mueezzeeshan11@gmail.com" class="bg-gradient-to-r from-teal-500 to-purple-500 glow-button px-6 py-3 rounded-xl font-semibold transition">Email</a>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="text-center py-8 border-t border-gray-800 text-gray-500">
-    Built by Mueez Zeeshan
-  </footer>
-
-  <!-- Loading Spinner -->
-  <div id="loading" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-    <div class="flex space-x-1">
-      <div class="w-2 h-8 bg-green-500 animate-bounce" style="animation-delay: 0s;"></div>
-      <div class="w-2 h-12 bg-green-500 animate-bounce" style="animation-delay: 0.2s;"></div>
-      <div class="w-2 h-6 bg-green-500 animate-bounce" style="animation-delay: 0.4s;"></div>
-      <div class="w-2 h-10 bg-green-500 animate-bounce" style="animation-delay: 0.6s;"></div>
-      <div class="w-2 h-7 bg-green-500 animate-bounce" style="animation-delay: 0.8s;"></div>
-    </div>
+  <div class="flex flex-col md:flex-row gap-4 w-full max-w-xl mb-3">
+    <input id="tickerInput" type="text" placeholder="Enter stock ticker (e.g., TSLA)" class="flex-1 px-5 py-4 rounded-2xl text-black font-bold tracking-wide focus:ring-4 focus:ring-purple-500 outline-none" />
+    <button onclick="predictStock()" class="bg-gradient-to-r from-purple-500 to-purple-700 glow-button px-6 py-4 rounded-2xl font-semibold">Predict Stock</button>
   </div>
 
-  <script>
-    async function predictStock() {
-      const ticker = document.getElementById('tickerInput').value.trim();
-      if (!ticker) return alert('Please enter a stock ticker');
+  <div id="results" class="hidden mt-3 glass rounded-2xl p-5 w-full max-w-xl text-left">
+    <p id="actualPrice" class="result-highlight"></p>
+    <p id="predictedPrice" class="result-highlight"></p>
+    <p id="signal" class="result-highlight text-xl"></p>
+    <p id="confidence" class="result-highlight text-xl"></p>
+    <div id="reasoning" class="mt-2"></div>
+  </div>
+</section>
 
-      document.getElementById('loading').classList.remove('hidden');
-      
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/predict?ticker=${ticker}`);
-        if (!response.ok) throw new Error('Failed to fetch prediction');
-        
-        const data = await response.json();
+<div id="loading" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+  <div class="flex space-x-1">
+    <div class="w-2 h-8 bg-green-500 animate-bounce"></div>
+    <div class="w-2 h-12 bg-green-500 animate-bounce"></div>
+    <div class="w-2 h-6 bg-green-500 animate-bounce"></div>
+    <div class="w-2 h-10 bg-green-500 animate-bounce"></div>
+    <div class="w-2 h-7 bg-green-500 animate-bounce"></div>
+  </div>
+</div>
 
-        document.getElementById('results').classList.remove('hidden');
-        document.getElementById('actualPrice').innerText = `Actual Price: $${parseFloat(data.last_close).toFixed(2)}`;
-        document.getElementById('predictedPrice').innerText = `Predicted Price: $${parseFloat(data.predicted_close).toFixed(2)}`;
-        
-        const signalEl = document.getElementById('signal');
-        signalEl.innerText = `Signal: ${data.signal}`;
-        signalEl.classList.remove('signal-buy', 'signal-sell', 'signal-neutral');
-        if (data.signal.toUpperCase() === 'BUY') signalEl.classList.add('signal-buy');
-        else if (data.signal.toUpperCase() === 'SELL') signalEl.classList.add('signal-sell');
-        else signalEl.classList.add('signal-neutral');
+<script>
+async function predictStock() {
+  const ticker = document.getElementById('tickerInput').value.trim();
+  if (!ticker) return alert('Please enter a stock ticker');
 
-        document.getElementById('confidence').innerText = `Confidence: ${parseFloat(data.confidence).toFixed(2)}%`;
-      } catch (error) {
-        alert('Error fetching prediction. Check backend logs.');
-        console.error(error);
-      } finally {
-        document.getElementById('loading').classList.add('hidden');
-      }
+  document.getElementById('loading').classList.remove('hidden');
+
+  try {
+    // Use relative path for local backend
+    const response = await fetch(`/predict?ticker=${ticker}`);
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || 'Failed to fetch prediction');
     }
-  </script>
+    const data = await response.json();
+
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('actualPrice').innerText = `Actual Price: $${parseFloat(data.last_close).toFixed(2)}`;
+    document.getElementById('predictedPrice').innerText = `Predicted Price: $${parseFloat(data.predicted_close).toFixed(2)}`;
+
+    // Signal
+    const signalEl = document.getElementById('signal');
+    signalEl.innerText = `Signal: ${data.signal}`;
+    signalEl.className = 'result-highlight text-xl';
+    if (data.signal.toLowerCase() === 'buy') signalEl.classList.add('signal-buy');
+    else if (data.signal.toLowerCase() === 'sell') signalEl.classList.add('signal-sell');
+    else signalEl.classList.add('signal-neutral');
+
+    // Confidence
+    const confEl = document.getElementById('confidence');
+    confEl.innerText = `Confidence: ${parseFloat(data.confidence).toFixed(2)}%`;
+    confEl.className = 'result-highlight text-xl';
+    if (data.confidence >= 70) confEl.classList.add('confidence-high');
+    else if (data.confidence >= 40) confEl.classList.add('confidence-medium');
+    else confEl.classList.add('confidence-low');
+
+    // Reasoning
+    const reasoningDiv = document.getElementById('reasoning');
+    reasoningDiv.innerHTML = '';
+    if (data.reasoning && data.reasoning.length) {
+      reasoningDiv.className = 'mt-2 p-4 bg-gray-800 rounded-lg';
+      const heading = document.createElement('h3');
+      heading.innerText = 'Reasoning';
+      heading.className = 'text-lg font-bold mb-2 text-purple-400';
+      reasoningDiv.appendChild(heading);
+      data.reasoning.forEach(line => {
+        const p = document.createElement('p');
+        p.innerText = `• ${line}`;
+        p.className = 'text-gray-300 text-sm mb-1';
+        reasoningDiv.appendChild(p);
+      });
+    } else reasoningDiv.className = 'mt-2';
+  } catch (error) {
+    alert('Error fetching prediction. Check backend logs.');
+    console.error(error);
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+</script>
 </body>
 </html>

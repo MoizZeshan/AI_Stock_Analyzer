@@ -2,11 +2,13 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from app.models_loader import xgb_model
+import shap
 
 FEATURES = ['Open', 'High', 'Low', 'Volume', 'MA10', 'MA50', 'MA200',
             'EMA10', 'EMA50', 'Return', 'Volatility', 'Momentum', 'RSI',
             'MACD', 'MACD_signal', 'ATR', 'Close_lag1', 'Close_lag2', 'Close_lag3']
 
+# -------------------- DataAgent --------------------
 class DataAgent:
     def __init__(self, ticker):
         self.ticker = ticker.upper()
@@ -28,6 +30,7 @@ class DataAgent:
         self.df = df
         return self.df
 
+# -------------------- FeatureAgent --------------------
 class FeatureAgent:
     def __init__(self, df):
         self.df = df.copy()
@@ -53,15 +56,64 @@ class FeatureAgent:
         self.df = df
         return df
 
+# -------------------- SHAP Explainer --------------------
+try:
+    explainer = shap.TreeExplainer(xgb_model)
+except Exception:
+    explainer = None
+
+# -------------------- ModelAgent --------------------
 class ModelAgent:
     def __init__(self, df):
-        self.df = df
+        self.df = df.copy()
 
-    def run(self):
-        X_last = self.df[FEATURES].iloc[[-1]]
-        pred_xgb = xgb_model.predict(X_last)[0]
-        return pred_xgb  # Only XGBoost prediction
+    def run(self, top_n: int = 5):
+        features = ['Open', 'High', 'Low', 'Volume', 'MA10', 'MA50', 'MA200',
+                    'EMA10', 'EMA50', 'Return', 'Volatility', 'Momentum', 'RSI',
+                    'MACD', 'MACD_signal', 'ATR', 'Close_lag1', 'Close_lag2', 'Close_lag3']
 
+        X = self.df[features]
+        X_last = X.iloc[[-1]]
+
+        pred_xgb = float(xgb_model.predict(X_last)[0])
+
+        global explainer
+        if explainer is None:
+            explainer = shap.TreeExplainer(xgb_model)
+
+        try:
+            shap_vals = explainer.shap_values(X_last)[0]
+        except Exception:
+            shap_vals = explainer(X_last).values[0]
+
+        features_info = []
+        for name, sv in zip(features, shap_vals):
+            features_info.append({
+                "feature": name,
+                "shap": float(sv),
+                "abs_shap": abs(float(sv))
+            })
+
+        features_info_sorted = sorted(features_info, key=lambda x: x["abs_shap"], reverse=True)
+        top_features = features_info_sorted[:top_n]
+
+        reasoning = []
+        for f in top_features:
+            direction = "positive" if f["shap"] > 0 else "negative"
+            fname = f["feature"]
+
+            if fname.lower().startswith("ma"):
+                reasoning.append(f"{fname} indicates a {direction} trend")
+            elif "lag" in fname.lower():
+                reasoning.append(f"{fname} shows {direction} momentum from previous close")
+            elif fname in ["RSI", "MACD", "MACD_signal"]:
+                reasoning.append(f"{fname} reflects {direction} pressure")
+            else:
+                reasoning.append(f"{fname} had a {direction} impact")
+
+        return pred_xgb, reasoning
+
+# -------------------- ComparisonAgent --------------------
 class ComparisonAgent:
     def __init__(self, last_close, predicted_close):
         self.last_close = last_close
@@ -69,34 +121,22 @@ class ComparisonAgent:
 
     def run(self):
         if self.predicted_close > self.last_close * 1.01:
-            signal = "Buy"
+            return "Buy"
         elif self.predicted_close < self.last_close * 0.99:
-            signal = "Sell"
+            return "Sell"
         else:
-            signal = "Neutral"
-        return signal
+            return "Neutral"
 
+# -------------------- ConfidenceAgent --------------------
 class ConfidenceAgent:
     def __init__(self, predicted_close, last_close, recent_returns):
-        """
-        predicted_close: XGB predicted closing price
-        last_close: most recent actual close price
-        recent_returns: Series of recent daily returns (pct change)
-        """
         self.predicted_close = predicted_close
         self.last_close = last_close
         self.recent_returns = recent_returns
 
     def run(self):
-        # % difference between prediction and last close
         diff_pct = abs(self.predicted_close - self.last_close) / self.last_close
-
-        # recent volatility (std of last 10 daily returns)
         volatility = np.std(self.recent_returns[-10:])
-
-        # Confidence = 100% - scaled diff, scaled by volatility
-        confidence = max(0, 100 - (diff_pct / (volatility + 1e-6)) * 50)  # scaling factor
-
-        # Limit confidence to 100%
+        confidence = max(0, 100 - (diff_pct / (volatility + 1e-6)) * 50)
         confidence = min(confidence, 100)
         return round(confidence, 2)
